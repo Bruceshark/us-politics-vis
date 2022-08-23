@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/us-politics/static/css/main.a0986468.css",
+    "main.js": "/us-politics/static/js/main.d6fdeed0.js",
+    "static/js/787.cda612ba.chunk.js": "/us-politics/static/js/787.cda612ba.chunk.js",
+    "index.html": "/us-politics/index.html",
+    "main.a0986468.css.map": "/us-politics/static/css/main.a0986468.css.map",
+    "main.d6fdeed0.js.map": "/us-politics/static/js/main.d6fdeed0.js.map",
+    "787.cda612ba.chunk.js.map": "/us-politics/static/js/787.cda612ba.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.a0986468.css",
+    "static/js/main.d6fdeed0.js"
+  ]
+}
