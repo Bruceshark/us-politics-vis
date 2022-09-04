@@ -4,36 +4,28 @@ import { geoAlbersUsa, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
 var projection;
 var dataset_, dataset, extremeVals, colorList, normalizeAttr, attr;
-const continuousColorList = ["#d0efff", "#03254c"];
-const partyColorList = ["#cc0000", "#0000cc"];
-const partyTxtList = ["Republican", "Democrat"];
-const ballotColorList = ["#FFB90F", "#FF6A6A", "#0000FF", "#CD0000", "#828282"];
-const ballotTxtList = [
+const CONTINUOUS_COLOR_LIST = ["#d0efff", "#03254c"];
+const PARTY_COLOR_LIST = ["#cc0000", "#0000cc"];
+const PARTY_TEXT_LIST = ["Republican", "Democrat"];
+const BALLOT_COLOR_LIST = ["#FFB90F", "#FF6A6A", "#0000FF", "#CD0000", "#828282"];
+const BALLOT_TEXT_LIST = [
   "Absentee",
   "Early",
   "Poll Vote",
   "Provisional",
   "No Vote",
 ];
+const OPACITY = 0.7
 
 const ScatterMap = ({ ethnicFilter, attrFilter }) => {
   // load the original dataset and draw the background map at the beginning
   useEffect(() => {
     async function mount() {
-      dataset_ = await d3.csv("scatter_map_dataset.csv");
+      dataset_ = await d3.csv("scatter_map_dataset.csv"); // 之后要从组件外载入
       drawBgMap();
     }
     mount();
   }, []);
-  // ethnic filter change, clean the map and maybe draw the scatter
-  useEffect(() => {
-    if (ethnicFilter.length > 0) {
-      d3.select("#map").selectAll("svg > circle").remove();
-      drawDots(ethnicFilter);
-    } else {
-      d3.select("#map").selectAll("svg > circle").remove();
-    }
-  }, [ethnicFilter]);
   // attribute filter change, redraw the legend and maybe redraw the scatter
   useEffect(() => {
     async function processNewScale() {
@@ -43,19 +35,19 @@ const ScatterMap = ({ ethnicFilter, attrFilter }) => {
         .domain([extremeVals[0], extremeVals[1]])
         .range([0, 1]);
     }
-    if (attrFilter && attrFilter.length > 0) {
+    if (dataset_ && attrFilter && attrFilter.length > 0) {
       d3.select("#map").selectAll("svg > circle").remove();
       d3.select("#legend").selectAll("*").remove();
       attr = attrFilter;
       dataset = dataset_.filter((ele) => ele[attr] && ele.long && ele.lat);
       if (attr === "impute_party") {
-        colorList = partyColorList;
-        extremeVals = partyTxtList;
+        colorList = PARTY_COLOR_LIST;
+        extremeVals = PARTY_TEXT_LIST;
       } else if (attr.indexOf("BallotType") > -1) {
-        colorList = ballotColorList;
-        extremeVals = ballotTxtList;
+        colorList = BALLOT_COLOR_LIST;
+        extremeVals = BALLOT_TEXT_LIST;
       } else {
-        colorList = continuousColorList;
+        colorList = CONTINUOUS_COLOR_LIST;
         processNewScale();
       }
       drawLegendScale();
@@ -64,6 +56,18 @@ const ScatterMap = ({ ethnicFilter, attrFilter }) => {
       }
     }
   }, [attrFilter]);
+  // ethnic filter change, clean the map and maybe draw the scatter
+  useEffect(() => {
+    if (!attr) {
+      return
+    }
+    if (ethnicFilter.length > 0) {
+      d3.select("#map").selectAll("svg > circle").remove();
+      drawDots(ethnicFilter);
+    } else {
+      d3.select("#map").selectAll("svg > circle").remove();
+    }
+  }, [ethnicFilter]);
   return (
     <div style={{ textAlign: "center" }}>
       <svg id="map"></svg>
@@ -89,7 +93,7 @@ const drawBgMap = () => {
       .attr("d", path)
       .style("stroke", "white")
       .style("stroke-width", "1")
-      .style("fill", "rgb(213,222,217)");
+      .style("fill", "rgb(240, 242, 241)");
   });
 };
 
@@ -106,7 +110,6 @@ const drawDots = (ethnicFilter) => {
       d3.rgb(colorList[colorList.length - 1])
     );
   }
-  console.log(dataset);
   d3.select("#map")
     .selectAll("circle")
     .data(dataset.filter((ele) => ethnicFilter.indexOf(ele.race) > -1))
@@ -121,6 +124,7 @@ const drawDots = (ethnicFilter) => {
     .attr("r", function (d) {
       return 1.5;
     })
+    .style("opacity", OPACITY)
     .style("fill", function (d) {
       if (attr === "impute_party" || attr.indexOf("BallotType") > -1) {
         return colorLevelMap[d[attr]];
@@ -145,6 +149,7 @@ const drawLegendScale = () => {
     .attr("y", 0)
     .attr("height", height)
     .attr("width", width)
+    .style("opacity", OPACITY)
     .attr("fill", (d) => d);
 
   d3.select("#legend")
