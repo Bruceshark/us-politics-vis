@@ -1,13 +1,26 @@
 import React, { useEffect } from "react";
 import * as d3 from "d3";
 import { geoAlbersUsa, geoPath } from "d3-geo";
+import { scaleLinear, scaleSequential } from "d3-scale";
 import { feature } from "topojson-client";
 var projection;
-var dataset_, dataset, extremeVals, colorList, normalizeAttr, attr;
+var dataset_,
+  dataset,
+  extremeVals,
+  colorList,
+  normalizeAttr,
+  colorLevelMap,
+  attr;
 const CONTINUOUS_COLOR_LIST = ["#d0efff", "#03254c"];
 const PARTY_COLOR_LIST = ["#cc0000", "#0000cc"];
 const PARTY_TEXT_LIST = ["Republican", "Democrat"];
-const BALLOT_COLOR_LIST = ["#FFB90F", "#FF6A6A", "#0000FF", "#CD0000", "#828282"];
+const BALLOT_COLOR_LIST = [
+  "#FFB90F",
+  "#FF6A6A",
+  "#0000FF",
+  "#CD0000",
+  "#828282",
+];
 const BALLOT_TEXT_LIST = [
   "Absentee",
   "Early",
@@ -15,7 +28,12 @@ const BALLOT_TEXT_LIST = [
   "Provisional",
   "No Vote",
 ];
-const OPACITY = 0.7
+const OPACITY = 0.7;
+const LEGEND_FONT_SIZE = 10;
+const LEGEND_DISCRETE_HEIGHT = 20;
+const LEGEND_DISCRETE_WIDTH = 20;
+const LEGEND_DISCRETE_DISTANCE = 60;
+const LEGEND_LINEAR_WIDTH = 200;
 
 const ScatterMap = ({ ethnicFilter, attrFilter }) => {
   // load the original dataset and draw the background map at the beginning
@@ -40,17 +58,45 @@ const ScatterMap = ({ ethnicFilter, attrFilter }) => {
       d3.select("#legend").selectAll("*").remove();
       attr = attrFilter;
       dataset = dataset_.filter((ele) => ele[attr] && ele.long && ele.lat);
+
       if (attr === "impute_party") {
+        // categorical var
         colorList = PARTY_COLOR_LIST;
         extremeVals = PARTY_TEXT_LIST;
+        colorLevelMap = {};
+        extremeVals.forEach((ele, idx) => {
+          colorLevelMap[ele] = colorList[idx];
+        });
+        drawCategoricalLegendScale();
+      } else if (attr === "edu_level") {
+        // nominal var
+        colorList = CONTINUOUS_COLOR_LIST;
+        colorLevelMap = d3.interpolateRgb(
+          d3.rgb(colorList[0]),
+          d3.rgb(colorList[colorList.length - 1])
+        );
+        processNewScale();
+        drawNominalLegendScale();
       } else if (attr.indexOf("BallotType") > -1) {
+        // categorical var
         colorList = BALLOT_COLOR_LIST;
         extremeVals = BALLOT_TEXT_LIST;
+        colorLevelMap = {};
+        extremeVals.forEach((ele, idx) => {
+          colorLevelMap[ele] = colorList[idx];
+        });
+        drawCategoricalLegendScale();
       } else {
+        // others: all continuous var
         colorList = CONTINUOUS_COLOR_LIST;
+        colorLevelMap = d3.interpolateRgb(
+          d3.rgb(colorList[0]),
+          d3.rgb(colorList[colorList.length - 1])
+        );
         processNewScale();
+        drawContinuousLegendScale();
       }
-      drawLegendScale();
+
       if (ethnicFilter && ethnicFilter.length > 0) {
         drawDots(ethnicFilter);
       }
@@ -59,7 +105,7 @@ const ScatterMap = ({ ethnicFilter, attrFilter }) => {
   // ethnic filter change, clean the map and maybe draw the scatter
   useEffect(() => {
     if (!attr) {
-      return
+      return;
     }
     if (ethnicFilter.length > 0) {
       d3.select("#map").selectAll("svg > circle").remove();
@@ -84,6 +130,7 @@ const drawBgMap = () => {
     .scale([1000]);
   var path = geoPath().projection(projection);
   var svg = d3.select("#map").attr("width", width).attr("height", height);
+  d3.select("#legend").attr("width", width).attr("height", 150);
   d3.json("map-data.json").then((data) => {
     svg
       .selectAll("path")
@@ -98,18 +145,6 @@ const drawBgMap = () => {
 };
 
 const drawDots = (ethnicFilter) => {
-  var colorLevelMap;
-  if (attr === "impute_party" || attr.indexOf("BallotType") > -1) {
-    colorLevelMap = {};
-    extremeVals.forEach((ele, idx) => {
-      colorLevelMap[ele] = colorList[idx];
-    });
-  } else {
-    colorLevelMap = d3.interpolateRgb(
-      d3.rgb(colorList[0]),
-      d3.rgb(colorList[colorList.length - 1])
-    );
-  }
   d3.select("#map")
     .selectAll("circle")
     .data(dataset.filter((ele) => ethnicFilter.indexOf(ele.race) > -1))
@@ -131,24 +166,19 @@ const drawDots = (ethnicFilter) => {
       } else {
         return colorLevelMap(normalizeAttr(d[attr]));
       }
-
-      // return d.impute_party === "Democrat" ? "blue" : "red";
     });
 };
 
-const drawLegendScale = () => {
-  var width = 20;
-  var height = 20;
-
+const drawCategoricalLegendScale = () => {
   d3.select("#legend")
     .selectAll("rect")
     .data(colorList)
     .enter()
     .append("rect")
-    .attr("x", (d, i) => i * 60)
+    .attr("x", (d, i) => i * LEGEND_DISCRETE_DISTANCE)
     .attr("y", 0)
-    .attr("height", height)
-    .attr("width", width)
+    .attr("height", LEGEND_DISCRETE_HEIGHT)
+    .attr("width", LEGEND_DISCRETE_WIDTH)
     .style("opacity", OPACITY)
     .attr("fill", (d) => d);
 
@@ -157,10 +187,71 @@ const drawLegendScale = () => {
     .data(extremeVals)
     .enter()
     .append("text")
-    .text((d) => (typeof d === "number" ? d.toFixed(1) : d))
-    .attr("x", (d, i) => i * 60)
-    .attr("font-size", 10)
-    .attr("y", height + 15);
+    .text((d) => d)
+    .attr("x", (d, i) => i * LEGEND_DISCRETE_DISTANCE)
+    .attr("font-size", LEGEND_FONT_SIZE)
+    .attr("y", LEGEND_DISCRETE_HEIGHT + LEGEND_FONT_SIZE * 1.5);
+};
+
+const drawNominalLegendScale = () => {
+  const nominalValArr = [
+    ...Array(extremeVals[extremeVals.length - 1] + 1).keys(),
+  ].slice(extremeVals[0]);
+
+  d3.select("#legend")
+    .selectAll("rect")
+    .data(nominalValArr)
+    .enter()
+    .append("rect")
+    .attr("x", (d, i) => i * LEGEND_DISCRETE_DISTANCE)
+    .attr("y", 0)
+    .attr("height", LEGEND_DISCRETE_HEIGHT)
+    .attr("width", LEGEND_DISCRETE_WIDTH)
+    .style("opacity", OPACITY)
+    .attr("fill", (d) => {
+      return colorLevelMap(normalizeAttr(d));
+    });
+
+  d3.select("#legend")
+    .selectAll("txt")
+    .data(nominalValArr)
+    .enter()
+    .append("text")
+    .text((d) => d.toFixed(1))
+    .attr("x", (d, i) => i * LEGEND_DISCRETE_DISTANCE)
+    .attr("font-size", LEGEND_FONT_SIZE)
+    .attr("y", LEGEND_DISCRETE_HEIGHT + LEGEND_FONT_SIZE * 1.5);
+};
+
+const drawContinuousLegendScale = () => {
+  const continuousValArr = Array.from(Array(100).keys());
+  const cScale = scaleSequential().interpolator(colorLevelMap).domain([0, 99]);
+  var xScale = scaleLinear().domain([0, 99]).range([0, LEGEND_LINEAR_WIDTH]);
+
+  d3.select("#legend")
+    .selectAll("rect")
+    .data(continuousValArr)
+    .enter()
+    .append("rect")
+    .attr("x", (d) => Math.floor(xScale(d)))
+    .attr("y", 0)
+    .attr("height", LEGEND_DISCRETE_HEIGHT)
+    .attr("width", (d) => {
+      return Math.floor(xScale(d + 1)) - Math.floor(xScale(d));
+    })
+    .style("opacity", OPACITY)
+    .style("stroke", "")
+    .attr("fill", (d) => cScale(d));
+
+  d3.select("#legend")
+    .selectAll("txt")
+    .data(extremeVals)
+    .enter()
+    .append("text")
+    .text((d) => d.toFixed(1))
+    .attr("x", (d, i) => i * LEGEND_LINEAR_WIDTH)
+    .attr("font-size", LEGEND_FONT_SIZE)
+    .attr("y", LEGEND_DISCRETE_HEIGHT + LEGEND_FONT_SIZE * 1.5);
 };
 
 export default ScatterMap;
