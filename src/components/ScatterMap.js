@@ -54,8 +54,8 @@ const ScatterMap = ({ ethnicFilter, attrFilter }) => {
         .range([0, 1]);
     }
     if (dataset_ && attrFilter && attrFilter.length > 0) {
-      d3.select("#map").selectAll("svg > circle").remove();
-      d3.select("#legend").selectAll("*").remove();
+      d3.select("#scatter-map").selectAll("svg > circle").remove();
+      d3.select("#scatter-legend").selectAll("*").remove();
       attr = attrFilter;
       dataset = dataset_.filter((ele) => ele[attr] && ele.long && ele.lat);
 
@@ -108,29 +108,30 @@ const ScatterMap = ({ ethnicFilter, attrFilter }) => {
       return;
     }
     if (ethnicFilter.length > 0) {
-      d3.select("#map").selectAll("svg > circle").remove();
+      d3.select("#scatter-map").selectAll("svg > circle").remove();
       drawDots(ethnicFilter);
     } else {
-      d3.select("#map").selectAll("svg > circle").remove();
+      d3.select("#scatter-map").selectAll("svg > circle").remove();
     }
   }, [ethnicFilter]);
   return (
     <div style={{ textAlign: "center" }}>
-      <svg id="map"></svg>
-      <svg id="legend"></svg>
+      <svg id="scatter-map"></svg>
+      <svg id="scatter-legend"></svg>
     </div>
   );
 };
 
 const drawBgMap = () => {
   var width = (window.innerWidth / 100) * 60;
+  console.log(window.innerWidth)
   var height = (window.innerHeight / 100) * 60;
   projection = geoAlbersUsa()
     .translate([width / 2, height / 2])
-    .scale([1000]);
+    .scale([width]);
   var path = geoPath().projection(projection);
-  var svg = d3.select("#map").attr("width", width).attr("height", height);
-  d3.select("#legend").attr("width", width).attr("height", 150);
+  var svg = d3.select("#scatter-map").attr("width", width).attr("height", height);
+  d3.select("#scatter-legend").attr("width", width).attr("height", 150);
   d3.json("map-data.json").then((data) => {
     svg
       .selectAll("path")
@@ -145,7 +146,7 @@ const drawBgMap = () => {
 };
 
 const drawDots = (ethnicFilter) => {
-  d3.select("#map")
+  d3.select("#scatter-map")
     .selectAll("circle")
     .data(dataset.filter((ele) => ethnicFilter.indexOf(ele.race) > -1))
     .enter()
@@ -170,7 +171,7 @@ const drawDots = (ethnicFilter) => {
 };
 
 const drawCategoricalLegendScale = () => {
-  d3.select("#legend")
+  d3.select("#scatter-legend")
     .selectAll("rect")
     .data(colorList)
     .enter()
@@ -182,7 +183,7 @@ const drawCategoricalLegendScale = () => {
     .style("opacity", OPACITY)
     .attr("fill", (d) => d);
 
-  d3.select("#legend")
+  d3.select("#scatter-legend")
     .selectAll("txt")
     .data(extremeVals)
     .enter()
@@ -198,7 +199,7 @@ const drawNominalLegendScale = () => {
     ...Array(extremeVals[extremeVals.length - 1] + 1).keys(),
   ].slice(extremeVals[0]);
 
-  d3.select("#legend")
+  d3.select("#scatter-legend")
     .selectAll("rect")
     .data(nominalValArr)
     .enter()
@@ -212,7 +213,7 @@ const drawNominalLegendScale = () => {
       return colorLevelMap(normalizeAttr(d));
     });
 
-  d3.select("#legend")
+  d3.select("#scatter-legend")
     .selectAll("txt")
     .data(nominalValArr)
     .enter()
@@ -228,7 +229,7 @@ const drawContinuousLegendScale = () => {
   const cScale = scaleSequential().interpolator(colorLevelMap).domain([0, 99]);
   var xScale = scaleLinear().domain([0, 99]).range([0, LEGEND_LINEAR_WIDTH]);
 
-  d3.select("#legend")
+  d3.select("#scatter-legend")
     .selectAll("rect")
     .data(continuousValArr)
     .enter()
@@ -243,7 +244,7 @@ const drawContinuousLegendScale = () => {
     .style("stroke", "")
     .attr("fill", (d) => cScale(d));
 
-  d3.select("#legend")
+  d3.select("#scatter-legend")
     .selectAll("txt")
     .data(extremeVals)
     .enter()
