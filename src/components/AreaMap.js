@@ -99,7 +99,7 @@ const AreaMap = ({ ethnicFilter, attrFilter }) => {
     }
   }, [ethnicFilter]);
   return (
-    <div style={{ textAlign: "center" }}>
+    <div id="map-outer" style={{ width: "100%", textAlign: "center" }}>
       <svg id="area-map"></svg>
       <svg id="area-legend"></svg>
     </div>
@@ -107,14 +107,14 @@ const AreaMap = ({ ethnicFilter, attrFilter }) => {
 };
 
 const drawBgMap = () => {
-  var width = (window.innerWidth / 100) * 60;
-  var height = (window.innerHeight / 100) * 60;
+  var width = document.getElementById("map-outer").offsetWidth
+  var height = width / 10 * 8
   projection = geoAlbersUsa()
     .translate([width / 2, height / 2])
-    .scale([width]);
+    .scale([width*1.2]);
   var path = geoPath().projection(projection);
   var svg = d3.select("#area-map").attr("width", width).attr("height", height);
-  d3.select("#area-legend").attr("width", width).attr("height", 150);
+  d3.select("#area-legend").attr("width", width).attr("height", LEGEND_HEIGHT);
   svg
     .selectAll("path")
     .data(feature(geoMapData, geoMapData.objects.counties).features)

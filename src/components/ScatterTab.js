@@ -34,48 +34,48 @@ class App extends Component {
   }
   render() {
     return (
-      <Row>
-        <Col span={18}>
-          <ScatterMap
-            ethnicFilter={this.state.ethnicFilter}
-            attrFilter={this.state.attrFilter}
-          />
-        </Col>
-        <Col span={6} style={{ alignSelf: "center", padding: "2%" }}>
-          <Select
-            // mode="multiple"
-            allowClear
-            style={{ width: "100%" }}
-            placeholder="select an attribute to explore"
-            onChange={(val) => {
-              this.setState({
-                attrFilter: val,
-              });
-            }}
-          >
-            {attrList.map((val) => (
-              <Option key={val}>{val}</Option>
-            ))}
-          </Select>
-          <br />
-          <br />
-          <Select
-            mode="multiple"
-            allowClear
-            style={{ width: "100%" }}
-            placeholder="select a race"
-            onChange={(val) => {
-              this.setState({
-                ethnicFilter: val,
-              });
-            }}
-          >
-            {ethnicList.map((val) => (
-              <Option key={val}>{val}</Option>
-            ))}
-          </Select>
-        </Col>
-      </Row>
+      <div>
+        <Row gutter={16}>
+          <Col span={10} offset={2}>
+            <Select
+              // mode="multiple"
+              allowClear
+              style={{ width: "100%" }}
+              placeholder="select an attribute to explore"
+              onChange={(val) => {
+                this.setState({
+                  attrFilter: val,
+                });
+              }}
+            >
+              {attrList.map((val) => (
+                <Option key={val}>{val}</Option>
+              ))}
+            </Select>
+          </Col>
+          <Col span={10}>
+            <Select
+              mode="multiple"
+              allowClear
+              style={{ width: "100%" }}
+              placeholder="select a race"
+              onChange={(val) => {
+                this.setState({
+                  ethnicFilter: val,
+                });
+              }}
+            >
+              {ethnicList.map((val) => (
+                <Option key={val}>{val}</Option>
+              ))}
+            </Select>
+          </Col>
+        </Row>
+        <ScatterMap
+          ethnicFilter={this.state.ethnicFilter}
+          attrFilter={this.state.attrFilter}
+        />
+      </div>
     );
   }
 }

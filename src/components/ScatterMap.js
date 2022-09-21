@@ -30,7 +30,7 @@ const BALLOT_TEXT_LIST = [
 ];
 const OPACITY = 0.7;
 const LEGEND_FONT_SIZE = 10;
-const LEGEND_DISCRETE_HEIGHT = 20;
+const LEGEND_HEIGHT = 20;
 const LEGEND_DISCRETE_WIDTH = 20;
 const LEGEND_DISCRETE_DISTANCE = 60;
 const LEGEND_LINEAR_WIDTH = 200;
@@ -115,7 +115,7 @@ const ScatterMap = ({ ethnicFilter, attrFilter }) => {
     }
   }, [ethnicFilter]);
   return (
-    <div style={{ textAlign: "center" }}>
+    <div id="map-outer" style={{ width: "100%", textAlign: "center" }}>
       <svg id="scatter-map"></svg>
       <svg id="scatter-legend"></svg>
     </div>
@@ -123,15 +123,14 @@ const ScatterMap = ({ ethnicFilter, attrFilter }) => {
 };
 
 const drawBgMap = () => {
-  var width = (window.innerWidth / 100) * 60;
-  console.log(window.innerWidth)
-  var height = (window.innerHeight / 100) * 60;
+  var width = document.getElementById("map-outer").offsetWidth
+  var height = width / 10 * 8
   projection = geoAlbersUsa()
     .translate([width / 2, height / 2])
-    .scale([width]);
+    .scale([width*1.2]);
   var path = geoPath().projection(projection);
   var svg = d3.select("#scatter-map").attr("width", width).attr("height", height);
-  d3.select("#scatter-legend").attr("width", width).attr("height", 150);
+  d3.select("#area-legend").attr("width", width).attr("height", LEGEND_HEIGHT);
   d3.json("map-data.json").then((data) => {
     svg
       .selectAll("path")
@@ -178,7 +177,7 @@ const drawCategoricalLegendScale = () => {
     .append("rect")
     .attr("x", (d, i) => i * LEGEND_DISCRETE_DISTANCE)
     .attr("y", 0)
-    .attr("height", LEGEND_DISCRETE_HEIGHT)
+    .attr("height", LEGEND_HEIGHT)
     .attr("width", LEGEND_DISCRETE_WIDTH)
     .style("opacity", OPACITY)
     .attr("fill", (d) => d);
@@ -191,7 +190,7 @@ const drawCategoricalLegendScale = () => {
     .text((d) => d)
     .attr("x", (d, i) => i * LEGEND_DISCRETE_DISTANCE)
     .attr("font-size", LEGEND_FONT_SIZE)
-    .attr("y", LEGEND_DISCRETE_HEIGHT + LEGEND_FONT_SIZE * 1.5);
+    .attr("y", LEGEND_HEIGHT + LEGEND_FONT_SIZE * 1.5);
 };
 
 const drawNominalLegendScale = () => {
@@ -206,7 +205,7 @@ const drawNominalLegendScale = () => {
     .append("rect")
     .attr("x", (d, i) => i * LEGEND_DISCRETE_DISTANCE)
     .attr("y", 0)
-    .attr("height", LEGEND_DISCRETE_HEIGHT)
+    .attr("height", LEGEND_HEIGHT)
     .attr("width", LEGEND_DISCRETE_WIDTH)
     .style("opacity", OPACITY)
     .attr("fill", (d) => {
@@ -221,7 +220,7 @@ const drawNominalLegendScale = () => {
     .text((d) => d.toFixed(1))
     .attr("x", (d, i) => i * LEGEND_DISCRETE_DISTANCE)
     .attr("font-size", LEGEND_FONT_SIZE)
-    .attr("y", LEGEND_DISCRETE_HEIGHT + LEGEND_FONT_SIZE * 1.5);
+    .attr("y", LEGEND_HEIGHT + LEGEND_FONT_SIZE * 1.5);
 };
 
 const drawContinuousLegendScale = () => {
@@ -236,7 +235,7 @@ const drawContinuousLegendScale = () => {
     .append("rect")
     .attr("x", (d) => Math.floor(xScale(d)))
     .attr("y", 0)
-    .attr("height", LEGEND_DISCRETE_HEIGHT)
+    .attr("height", LEGEND_HEIGHT)
     .attr("width", (d) => {
       return Math.floor(xScale(d + 1)) - Math.floor(xScale(d));
     })
@@ -252,7 +251,7 @@ const drawContinuousLegendScale = () => {
     .text((d) => d.toFixed(1))
     .attr("x", (d, i) => i * LEGEND_LINEAR_WIDTH)
     .attr("font-size", LEGEND_FONT_SIZE)
-    .attr("y", LEGEND_DISCRETE_HEIGHT + LEGEND_FONT_SIZE * 1.5);
+    .attr("y", LEGEND_HEIGHT + LEGEND_FONT_SIZE * 1.5);
 };
 
 export default ScatterMap;

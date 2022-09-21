@@ -1,4 +1,29 @@
 .ant-tabs-nav-wrap {
-    margin-left: 10vw;
-    width: 70%;
+  margin-left: 10vw;
+  width: 70%;
 }
+.ant-layout-content {
+  background: #fff;
+}
+.ant-layout-header {
+    font-size: 1.1rem;
+}
+.ant-layout-header .btn{
+    color: white;
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+.ant-layout-header .btn-selected{
+    text-decoration: underline;
+}
+.view-header {
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+.view-header .divider {
+    margin: 1rem 0;
+    height: 0.1rem;
+    background-color: #d6d6d6;
+}
+

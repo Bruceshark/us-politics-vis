@@ -1,27 +1,93 @@
 import ScatterTab from "./components/ScatterTab.js";
 import AreaTab from "./components/AreaTab.js";
 import React, { Component } from "react";
-import { Tabs } from "antd";
+import { Layout, Select, Col, Row } from "antd";
 import "./App.css";
+const { Header, Content } = Layout;
+const { Option } = Select;
+const tabList = ["Scatter", "Area", "Area - changes"];
+const yearList = [2012, 2014, 2016, 2018, 2020];
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      ethnicFilter: [],
-      attrFilter: [],
+      selectedTab: 0,
     };
   }
   render() {
     return (
       <div className="App">
-        <Tabs defaultActiveKey="2">
-          <Tabs.TabPane tab="scatter" key="1">
-            <ScatterTab />
-          </Tabs.TabPane>
-          <Tabs.TabPane tab="area" key="2" forceRender={true}>
-            <AreaTab />
-          </Tabs.TabPane>
-        </Tabs>
+        <Layout style={{ minHeight: "100vh", overflow: "hidden" }}>
+          <Header>
+            <Row>
+              <Col span={12}>
+                <Row gutter={16}>
+                  {tabList.map((ele, idx) => {
+                    return (
+                      <Col
+                        key={idx}
+                        className={this.state.selectedTab === idx ? "btn btn-selected" : "btn"}
+                        onClick={() => this.setState({ selectedTab: idx })}
+                      >
+                        {ele}
+                      </Col>
+                    );
+                  })}
+                </Row>
+              </Col>
+              <Col span={2} offset={10}>
+                <Select
+                  defaultValue={2012}
+                  style={{ width: 120, color: "white" }}
+                  bordered={false}
+                >
+                  {yearList.map((ele, idx) => {
+                    return (
+                      <Option key={idx} value={ele}>
+                        {ele}
+                      </Option>
+                    );
+                  })}
+                </Select>
+              </Col>
+            </Row>
+          </Header>
+          <Row
+            style={{ height: "calc(100vh - 64px)", padding: "0.5rem" }}
+            gutter={10}
+          >
+            <Col span={10} style={{ height: "100%" }}>
+              <Content
+                style={{
+                  height: "100%",
+                  padding: "1rem",
+                }}
+              >
+                <div className="view-header">
+                  <div>Map View</div>
+                  <div className="divider" />
+                </div>
+                {this.state.selectedTab === 0 && <ScatterTab />}
+                {this.state.selectedTab === 1 && <AreaTab />}
+                {this.state.selectedTab === 2 && <AreaTab />}
+              </Content>
+            </Col>
+            <Col span={14} style={{ height: "100%" }}>
+              <Content
+                style={{
+                  height: "100%",
+                  padding: "1rem",
+                }}
+              >
+                <div className="view-header">
+                  <div>Lineup View</div>
+                  <div className="divider" />
+                </div>
+                <div>Put Lineup Component here</div>
+              </Content>
+            </Col>
+          </Row>
+        </Layout>
       </div>
     );
   }
