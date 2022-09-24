@@ -4,6 +4,7 @@
   "homepage": "https://bruceshark.github.io/us-politics-vis",
   "private": true,
   "dependencies": {
+    "@lineup-lite/table": "^1.7.0",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^13.5.0",

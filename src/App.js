@@ -1,5 +1,6 @@
 import ScatterTab from "./components/ScatterTab.js";
 import AreaTab from "./components/AreaTab.js";
+import LineUp from "./components/LineUp.js"
 import React, { Component } from "react";
 import { Layout, Select, Col, Row } from "antd";
 import "./App.css";
@@ -83,7 +84,7 @@ class App extends Component {
                   <div>Lineup View</div>
                   <div className="divider" />
                 </div>
-                <div>Put Lineup Component here</div>
+                {<LineUp />}
               </Content>
             </Col>
           </Row>
