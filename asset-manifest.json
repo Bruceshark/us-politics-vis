@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/us-politics-vis/static/css/main.60e469cf.css",
-    "main.js": "/us-politics-vis/static/js/main.129f49c6.js",
+    "main.css": "/us-politics-vis/static/css/main.0ab27997.css",
+    "main.js": "/us-politics-vis/static/js/main.17c27866.js",
     "static/js/787.cda612ba.chunk.js": "/us-politics-vis/static/js/787.cda612ba.chunk.js",
     "index.html": "/us-politics-vis/index.html",
-    "main.60e469cf.css.map": "/us-politics-vis/static/css/main.60e469cf.css.map",
-    "main.129f49c6.js.map": "/us-politics-vis/static/js/main.129f49c6.js.map",
+    "main.0ab27997.css.map": "/us-politics-vis/static/css/main.0ab27997.css.map",
+    "main.17c27866.js.map": "/us-politics-vis/static/js/main.17c27866.js.map",
     "787.cda612ba.chunk.js.map": "/us-politics-vis/static/js/787.cda612ba.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.60e469cf.css",
-    "static/js/main.129f49c6.js"
+    "static/css/main.0ab27997.css",
+    "static/js/main.17c27866.js"
   ]
 }
