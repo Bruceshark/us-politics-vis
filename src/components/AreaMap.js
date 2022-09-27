@@ -9,17 +9,21 @@ var geoMapData,
   dataset,
   extremeVals,
   colorList,
-  normalizeAttr,
-  colorLevelMap,
+  // normalizeAttr,
+  // colorLevelMap,
   attr;
 const CONTINUOUS_COLOR_LIST = ["#d0efff", "#03254c"];
-const PARTY_COLOR_LIST = ["#0000cc", "#cc0000"];
-const PARTY_TEXT_LIST = ["Republican", "Democrat"];
 const LEGEND_FONT_SIZE = 10;
 const LEGEND_HEIGHT = 20;
 const LEGEND_LINEAR_WIDTH = 200;
 
-const AreaMap = ({ ethnicFilter, attrFilter }) => {
+var normalizeAttr = d3.scaleLinear().domain([0, 1]).range([0, 1]);
+var colorLevelMap = d3.interpolateRgb(
+  d3.rgb(CONTINUOUS_COLOR_LIST[0]),
+  d3.rgb(CONTINUOUS_COLOR_LIST[CONTINUOUS_COLOR_LIST.length - 1])
+);
+
+const AreaMap = ({ countyData }) => {
   // load the original dataset and draw the background map at the beginning
   useEffect(() => {
     async function mount() {
@@ -30,74 +34,12 @@ const AreaMap = ({ ethnicFilter, attrFilter }) => {
     }
     mount();
   }, []);
-  // attribute filter change, redraw the legend and maybe redraw the scatter
   useEffect(() => {
-    async function processNewScale() {
-      normalizeAttr = d3
-        .scaleLinear()
-        .domain([extremeVals[0], extremeVals[1]])
-        .range([0, 1]);
-    }
-    if (attrFilter && attrFilter.length > 0) {
-      d3.select("#area-map").selectAll("svg > circle").remove();
-      d3.select("#area-legend").selectAll("*").remove();
-      attr = attrFilter;
-      if (attr === "impute_party_republican") {
-        colorList = PARTY_COLOR_LIST;
-      } else {
-        colorList = CONTINUOUS_COLOR_LIST;
-      }
-      const maxVal = Math.max(
-        ...Object.values(dataset).map((ethnicData) => {
-          return Math.max(...Object.values(ethnicData[attr]));
-        })
-      );
-      const minVal = Math.min(
-        ...Object.values(dataset).map((ethnicData) => {
-          return Math.min(...Object.values(ethnicData[attr]));
-        })
-      );
+    d3.select("#area-map").selectAll("svg > circle").remove();
+    d3.select("#area-legend").selectAll("*").remove();
+    drawAreas(countyData);
+  }, [countyData]);
 
-      extremeVals = [0, 1];
-      if (maxVal > 1 || minVal < 0) {
-        extremeVals = [minVal, maxVal];
-      }
-      if (attr === "impute_party_republican") {
-        colorLevelMap = d3
-          .scaleLinear()
-          .domain([0, 0.5, 1])
-          .range([colorList[0], "#c0c0c0", colorList[1]])
-          .interpolate(d3.interpolateHcl);
-      } else {
-        colorLevelMap = d3.interpolateRgb(
-          d3.rgb(colorList[0]),
-          d3.rgb(colorList[colorList.length - 1])
-        );
-      }
-
-      processNewScale();
-      drawContinuousLegendScale();
-
-      if (ethnicFilter && ethnicFilter.length > 0) {
-        drawDots(ethnicFilter);
-      }
-    }
-  }, [attrFilter]);
-  // ethnic filter change, clean the map and maybe draw the scatter
-  useEffect(() => {
-    if (!attr) {
-      return;
-    }
-    if (ethnicFilter.length > 0) {
-      drawDots(ethnicFilter);
-    } else {
-      d3.select("#area-map")
-        .selectAll("svg > path")
-        .style("fill", function (d) {
-          return "rgb(240, 242, 241)";
-        });
-    }
-  }, [ethnicFilter]);
   return (
     <div id="map-outer" style={{ width: "100%", textAlign: "center" }}>
       <svg id="area-map"></svg>
@@ -107,11 +49,11 @@ const AreaMap = ({ ethnicFilter, attrFilter }) => {
 };
 
 const drawBgMap = () => {
-  var width = document.getElementById("map-outer").offsetWidth
-  var height = width / 10 * 8
+  var width = document.getElementById("map-outer").offsetWidth;
+  var height = (width / 10) * 8;
   projection = geoAlbersUsa()
     .translate([width / 2, height / 2])
-    .scale([width*1.2]);
+    .scale([width * 1.2]);
   var path = geoPath().projection(projection);
   var svg = d3.select("#area-map").attr("width", width).attr("height", height);
   d3.select("#area-legend").attr("width", width).attr("height", LEGEND_HEIGHT);
@@ -131,34 +73,7 @@ const drawBgMap = () => {
     });
 };
 
-const drawDots = (ethnicFilter) => {
-  let countyValDict = {};
-  let countyPopDict = {};
-  let countyMeanDict = {};
-  ethnicFilter.forEach((ethnic) => {
-    let ethnicData = dataset[ethnic][attr];
-    let ethnicPopulation = populationData[ethnic];
-    Object.keys(ethnicData).forEach((countyCode) => {
-      if (countyCode in countyValDict) {
-        countyValDict[countyCode] =
-          countyValDict[countyCode] +
-          ethnicData[countyCode] * ethnicPopulation[countyCode];
-      } else {
-        countyValDict[countyCode] =
-          ethnicData[countyCode] * ethnicPopulation[countyCode];
-      }
-      if (countyCode in countyPopDict) {
-        countyPopDict[countyCode] =
-          countyPopDict[countyCode] + ethnicPopulation[countyCode];
-      } else {
-        countyPopDict[countyCode] = ethnicPopulation[countyCode];
-      }
-    });
-  });
-  Object.keys(countyValDict).forEach((countyCode) => {
-    countyMeanDict[countyCode] =
-      countyValDict[countyCode] / countyPopDict[countyCode];
-  });
+const drawAreas = (countyValDict) => {
   d3.select("#area-map")
     .selectAll("path")
     .style("fill", function (d) {
@@ -166,8 +81,8 @@ const drawDots = (ethnicFilter) => {
       if (id.length < 5) {
         id = "0" + id;
       }
-      if (id in countyMeanDict) {
-        return colorLevelMap(normalizeAttr(countyMeanDict[id]));
+      if (id in countyValDict) {
+        return colorLevelMap(normalizeAttr(countyValDict[id]));
       } else {
         return "rgb(240, 242, 241)";
       }

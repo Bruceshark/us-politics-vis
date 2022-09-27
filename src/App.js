@@ -4,16 +4,29 @@ import LineUp from "./components/LineUp.js"
 import React, { Component } from "react";
 import { Layout, Select, Col, Row } from "antd";
 import "./App.css";
+import * as d3 from "d3";
+
 const { Header, Content } = Layout;
 const { Option } = Select;
 const tabList = ["Scatter", "Area", "Area - changes"];
-const yearList = [2012, 2014, 2016, 2018, 2020];
+const yearList = ["2012", "2016", "2020"];
+var dataset = {};
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedTab: 0,
+      selectedTab: 1,
+      selectedYear1: "2012",
+      selectedYear2: "2020"
     };
+  }
+  async componentDidMount() {
+    for (let yearIdx in yearList) {
+      let year = yearList[yearIdx]
+      dataset[year] = await d3.csv(`dataset/${year}.csv`)
+    }
+    console.log("===dataset loaded===")
+    console.log(dataset)
   }
   render() {
     return (
@@ -36,12 +49,35 @@ class App extends Component {
                   })}
                 </Row>
               </Col>
-              <Col span={2} offset={10}>
+              <Col span={2} offset={8}>
                 <Select
-                  defaultValue={2012}
+                  defaultValue={this.state.selectedYear1}
                   style={{ width: 120, color: "white" }}
                   bordered={false}
-                >
+                  onChange={(val) => {
+                    this.setState({
+                      selectedYear1: val,
+                    });
+                  }}                >
+                  {yearList.map((ele, idx) => {
+                    return (
+                      <Option key={idx} value={ele}>
+                        {ele}
+                      </Option>
+                    );
+                  })}
+                </Select>
+              </Col>
+              <Col span={2}>
+                <Select
+                  defaultValue={this.state.selectedYear2}
+                  style={{ width: 120, color: "white" }}
+                  bordered={false}
+                  onChange={(val) => {
+                    this.setState({
+                      selectedYear2: val,
+                    });
+                  }}                >
                   {yearList.map((ele, idx) => {
                     return (
                       <Option key={idx} value={ele}>
@@ -69,8 +105,8 @@ class App extends Component {
                   <div className="divider" />
                 </div>
                 {this.state.selectedTab === 0 && <ScatterTab />}
-                {this.state.selectedTab === 1 && <AreaTab />}
-                {this.state.selectedTab === 2 && <AreaTab />}
+                {this.state.selectedTab === 1 && <AreaTab dataset={dataset} year1={this.state.selectedYear1}/>}
+                {this.state.selectedTab === 2 && <AreaTab dataset={dataset} year1={this.state.selectedYear1} year2={this.state.selectedYear2}/>}
               </Content>
             </Col>
             <Col span={14} style={{ height: "100%" }}>

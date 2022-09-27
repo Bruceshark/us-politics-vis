@@ -1,87 +1,152 @@
 import AreaMap from "./AreaMap.js";
-import React, { Component } from "react";
+import React, { useEffect, useState } from "react";
 import { Col, Row, Select } from "antd";
+import _ from "lodash";
 const { Option } = Select;
 const attrList = [
-  "impute_party_republican",
-  "income_avg",
-  "education_level_avg",
-  "voting_rate_2020",
-  "voting_rate_2012",
-  "ballot_type_absentee_2012",
-  "ballot_type_early_2012",
-  "ballot_type_poll_vote_2012",
-  "ballot_type_provisional_2012",
-  "ballot_type_other_2012",
-  "ballot_type_no_vote_2012",
-  "ballot_type_absentee_2020",
-  "ballot_type_early_2020",
-  "ballot_type_poll_vote_2020",
-  "ballot_type_provisional_2020",
-  "ballot_type_other_2020",
-  "ballot_type_no_vote_2020",
+  { label: "voting rate", value: "voting" },
+  { label: "population rate", value: "population" },
 ];
 const ethnicList = [
-  "East and South Asian",
-  "European",
-  "Hispanic and Portuguese",
-  "Likely African-American",
-  "Other",
+  { label: "East and South Asian", value: "asian" },
+  { label: "European", value: "european" },
+  { label: "Hispanic and Portuguese", value: "hispanic" },
+  { label: "Likely African-American", value: "african" },
+  { label: "Other", value: "other" },
 ];
-class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      ethnicFilter: [],
-      attrFilter: [],
-    };
-  }
-  render() {
-    return (
-      <div>
-        <Row gutter={16}>
-          <Col span={10} offset={2}>
-            <Select
-              // mode="multiple"
-              allowClear
-              style={{ width: "100%" }}
-              placeholder="select an attribute to explore"
-              onChange={(val) => {
-                this.setState({
-                  attrFilter: val,
-                });
-              }}
-            >
-              {attrList.map((val) => (
-                <Option key={val}>{val}</Option>
-              ))}
-            </Select>
-          </Col>
-          <Col span={10}>
-            <Select
-              mode="multiple"
-              allowClear
-              style={{ width: "100%" }}
-              placeholder="select a race"
-              onChange={(val) => {
-                this.setState({
-                  ethnicFilter: val,
-                });
-              }}
-            >
-              {ethnicList.map((val) => (
-                <Option key={val}>{val}</Option>
-              ))}
-            </Select>
-          </Col>
-        </Row>
-        <AreaMap
-          ethnicFilter={this.state.ethnicFilter}
-          attrFilter={this.state.attrFilter}
-        />
-      </div>
-    );
-  }
-}
+const partyList = [
+  { label: "Democrat", value: "democrat" },
+  { label: "Republican", value: "republican" },
+  { label: "Non partisan", value: "nonpartisan" },
+];
 
-export default App;
+var selectedAttr = null;
+var selectedPartyList = [];
+var selectedEthnicList = [];
+const AreaTab = ({ dataset, year1 }) => {
+  const [countyData, setData] = useState({})
+  useEffect(() => {
+    handleChangeFilter()
+  }, [dataset, year1]);
+  const handleChangeFilter = () => {
+    if (!selectedAttr) return;
+    if (selectedPartyList.length === 0 && selectedEthnicList.length === 0)
+      return;
+    let allowedPartyList =
+      selectedPartyList.length === 0
+        ? partyList.map((ele) => ele.value)
+        : selectedPartyList;
+    let allowedEthnicList =
+      selectedEthnicList.length === 0
+        ? ethnicList.map((ele) => ele.value)
+        : selectedEthnicList;
+    let countyValDict = {}
+    let focusKeyList = [];
+    let allKeyList = [];
+    if (selectedAttr === "voting") {
+      Object.keys(dataset[year1][0]).forEach((key) => {
+        if (key === "county") return;
+        let [voted, ethnic, party] = key.split("_");
+        if (
+          allowedEthnicList.indexOf(ethnic) > -1 &&
+          allowedPartyList.indexOf(party) > -1
+        ) {
+          allKeyList.push(key);
+          if (voted === "voted") {
+            focusKeyList.push(key);
+          }
+        }
+      });
+    }
+    if (selectedAttr === "population") {
+      Object.keys(dataset[year1][0]).forEach((key) => {
+        if (key === "county") return;
+        allKeyList.push(key);
+        let [voted, ethnic, party] = key.split("_");
+        if (
+          allowedEthnicList.indexOf(ethnic) > -1 &&
+          allowedPartyList.indexOf(party) > -1
+        ) {
+          focusKeyList.push(key)
+        }
+      });
+    }
+    dataset[year1].forEach((countyData) => {
+      let votedValList = Object.values(_.pick(countyData, focusKeyList)).map(Number);
+      let allValList = Object.values(_.pick(countyData, allKeyList)).map(Number);
+      let votedSum = _.sum(votedValList)
+      let allSum = _.sum(allValList);
+      let ratio
+      if (allSum === 0) {
+        ratio = 0
+      } else {
+        ratio = votedSum / allSum
+      }
+      countyValDict[countyData.county] = ratio
+    });
+    setData({...countyValDict})
+    // console.log(countyData)
+  };
+  return (
+    <div>
+      <AreaMap
+        countyData={countyData}
+      // ethnicFilter={ethnicFilter.value}
+      // partyFilter={attrFilter.value}
+      // attrFilter={partyFilter.value}
+      />
+      <Row gutter={16}>
+        <Col span={6} offset={2}>
+          <Select
+            // mode="multiple"
+            allowClear
+            style={{ width: "100%" }}
+            placeholder="select an attribute to explore"
+            onChange={(val) => {
+              selectedAttr = val;
+              handleChangeFilter();
+            }}
+          >
+            {attrList.map((val) => (
+              <Option key={val.value}>{val.label}</Option>
+            ))}
+          </Select>
+        </Col>
+        <Col span={6}>
+          <Select
+            mode="multiple"
+            allowClear
+            style={{ width: "100%" }}
+            placeholder="select a race"
+            onChange={(val) => {
+              selectedEthnicList = val;
+              handleChangeFilter();
+            }}
+          >
+            {ethnicList.map((val) => (
+              <Option key={val.value}>{val.label}</Option>
+            ))}
+          </Select>
+        </Col>
+        <Col span={6}>
+          <Select
+            mode="multiple"
+            allowClear
+            style={{ width: "100%" }}
+            placeholder="select a party"
+            onChange={(val) => {
+              selectedPartyList = val;
+              handleChangeFilter();
+            }}
+          >
+            {partyList.map((val) => (
+              <Option key={val.value}>{val.label}</Option>
+            ))}
+          </Select>
+        </Col>
+      </Row>
+    </div>
+  );
+};
+
+export default AreaTab;
