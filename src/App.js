@@ -70,6 +70,7 @@ class App extends Component {
               </Col>
               <Col span={2}>
                 <Select
+                  disabled={this.state.selectedTab !== 2}
                   defaultValue={this.state.selectedYear2}
                   style={{ width: 120, color: "white" }}
                   bordered={false}

@@ -4,41 +4,43 @@ import { geoAlbersUsa, geoPath } from "d3-geo";
 import { scaleLinear, scaleSequential } from "d3-scale";
 import { feature } from "topojson-client";
 var projection;
-var geoMapData,
-  populationData,
-  dataset,
-  extremeVals,
-  colorList,
-  // normalizeAttr,
-  // colorLevelMap,
-  attr;
+var geoMapData, extremeVals, normalizeAttr, colorLevelMap;
+
 const CONTINUOUS_COLOR_LIST = ["#d0efff", "#03254c"];
+const CONTINUOUS_COLOR_LIST_NEG_TO_POS = ["#0000cc", "#c0c0c0", "#cc0000"];
 const LEGEND_FONT_SIZE = 10;
 const LEGEND_HEIGHT = 20;
 const LEGEND_LINEAR_WIDTH = 200;
 
-var normalizeAttr = d3.scaleLinear().domain([0, 1]).range([0, 1]);
-var colorLevelMap = d3.interpolateRgb(
-  d3.rgb(CONTINUOUS_COLOR_LIST[0]),
-  d3.rgb(CONTINUOUS_COLOR_LIST[CONTINUOUS_COLOR_LIST.length - 1])
-);
-
-const AreaMap = ({ countyData }) => {
+const AreaMap = ({ countyData, yearNum }) => {
   // load the original dataset and draw the background map at the beginning
   useEffect(() => {
     async function mount() {
-      dataset = await d3.json("area_map_dataset.json"); // 之后要从组件外载入
-      populationData = await d3.json("population_by_county.json");
       geoMapData = await d3.json("map-data.json");
       drawBgMap();
+      drawContinuousLegendScale();
     }
     mount();
   }, []);
   useEffect(() => {
     d3.select("#area-map").selectAll("svg > circle").remove();
-    d3.select("#area-legend").selectAll("*").remove();
+    if (yearNum === 1) {
+      colorLevelMap = d3.interpolateRgb(
+        d3.rgb(CONTINUOUS_COLOR_LIST[0]),
+        d3.rgb(CONTINUOUS_COLOR_LIST[CONTINUOUS_COLOR_LIST.length - 1])
+      );
+      normalizeAttr = d3.scaleLinear().domain([0, 1]).range([0, 1]);
+    }
+    if (yearNum === 2) {
+      colorLevelMap = d3
+        .scaleLinear()
+        .domain([0, 0.5, 1])
+        .range(CONTINUOUS_COLOR_LIST_NEG_TO_POS)
+        .interpolate(d3.interpolateHcl);
+      normalizeAttr = d3.scaleLinear().domain([-1, 1]).range([0, 1]);
+    }
     drawAreas(countyData);
-  }, [countyData]);
+  }, [countyData, yearNum]);
 
   return (
     <div id="map-outer" style={{ width: "100%", textAlign: "center" }}>

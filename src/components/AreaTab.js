@@ -23,33 +23,40 @@ const partyList = [
 var selectedAttr = null;
 var selectedPartyList = [];
 var selectedEthnicList = [];
-const AreaTab = ({ dataset, year1 }) => {
-  const [countyData, setData] = useState({})
+const AreaTab = ({ dataset, year1, year2 }) => {
+  const [countyData, setData] = useState({});
   useEffect(() => {
-    handleChangeFilter()
-  }, [dataset, year1]);
+    handleChangeFilter();
+  }, [dataset, year1, year2]);
   const handleChangeFilter = () => {
     if (!selectedAttr) return;
-    if (selectedPartyList.length === 0 && selectedEthnicList.length === 0)
+    if (selectedPartyList.length === 0 || selectedEthnicList.length === 0)
       return;
-    let allowedPartyList =
-      selectedPartyList.length === 0
-        ? partyList.map((ele) => ele.value)
-        : selectedPartyList;
-    let allowedEthnicList =
-      selectedEthnicList.length === 0
-        ? ethnicList.map((ele) => ele.value)
-        : selectedEthnicList;
-    let countyValDict = {}
+    let countyValDict;
+    console.log(year2);
+    if (year2) {
+      let countyValDict1 = processSingleYear(year1);
+      let countyValDict2 = processSingleYear(year2);
+      countyValDict = {};
+      Object.keys(countyValDict1).forEach((key) => {
+        countyValDict[key] = countyValDict2[key] - countyValDict1[key];
+      });
+    } else {
+      countyValDict = processSingleYear(year1);
+    }
+    setData({ ...countyValDict });
+  };
+  const processSingleYear = (year) => {
+    let countyValDict = {};
     let focusKeyList = [];
     let allKeyList = [];
     if (selectedAttr === "voting") {
-      Object.keys(dataset[year1][0]).forEach((key) => {
+      Object.keys(dataset[year][0]).forEach((key) => {
         if (key === "county") return;
         let [voted, ethnic, party] = key.split("_");
         if (
-          allowedEthnicList.indexOf(ethnic) > -1 &&
-          allowedPartyList.indexOf(party) > -1
+          selectedEthnicList.indexOf(ethnic) > -1 &&
+          selectedPartyList.indexOf(party) > -1
         ) {
           allKeyList.push(key);
           if (voted === "voted") {
@@ -59,44 +66,42 @@ const AreaTab = ({ dataset, year1 }) => {
       });
     }
     if (selectedAttr === "population") {
-      Object.keys(dataset[year1][0]).forEach((key) => {
+      Object.keys(dataset[year][0]).forEach((key) => {
         if (key === "county") return;
         allKeyList.push(key);
         let [voted, ethnic, party] = key.split("_");
         if (
-          allowedEthnicList.indexOf(ethnic) > -1 &&
-          allowedPartyList.indexOf(party) > -1
+          selectedEthnicList.indexOf(ethnic) > -1 &&
+          selectedPartyList.indexOf(party) > -1
         ) {
-          focusKeyList.push(key)
+          focusKeyList.push(key);
         }
       });
     }
-    dataset[year1].forEach((countyData) => {
-      let votedValList = Object.values(_.pick(countyData, focusKeyList)).map(Number);
-      let allValList = Object.values(_.pick(countyData, allKeyList)).map(Number);
-      let votedSum = _.sum(votedValList)
+    dataset[year].forEach((countyData) => {
+      let votedValList = Object.values(_.pick(countyData, focusKeyList)).map(
+        Number
+      );
+      let allValList = Object.values(_.pick(countyData, allKeyList)).map(
+        Number
+      );
+      let votedSum = _.sum(votedValList);
       let allSum = _.sum(allValList);
-      let ratio
+      let ratio;
       if (allSum === 0) {
-        ratio = 0
+        ratio = 0;
       } else {
-        ratio = votedSum / allSum
+        ratio = votedSum / allSum;
       }
-      countyValDict[countyData.county] = ratio
+      countyValDict[countyData.county] = ratio;
     });
-    setData({...countyValDict})
-    // console.log(countyData)
+    return countyValDict;
   };
   return (
     <div>
-      <AreaMap
-        countyData={countyData}
-      // ethnicFilter={ethnicFilter.value}
-      // partyFilter={attrFilter.value}
-      // attrFilter={partyFilter.value}
-      />
+      <AreaMap countyData={countyData} yearNum={year2 ? 2 : 1} />
       <Row gutter={16}>
-        <Col span={6} offset={2}>
+        <Col span={8}>
           <Select
             // mode="multiple"
             allowClear
@@ -112,7 +117,7 @@ const AreaTab = ({ dataset, year1 }) => {
             ))}
           </Select>
         </Col>
-        <Col span={6}>
+        <Col span={8}>
           <Select
             mode="multiple"
             allowClear
@@ -128,7 +133,7 @@ const AreaTab = ({ dataset, year1 }) => {
             ))}
           </Select>
         </Col>
-        <Col span={6}>
+        <Col span={8}>
           <Select
             mode="multiple"
             allowClear
