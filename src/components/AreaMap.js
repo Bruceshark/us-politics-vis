@@ -29,7 +29,8 @@ const AreaMap = ({ countyData, yearNum }) => {
         d3.rgb(CONTINUOUS_COLOR_LIST[0]),
         d3.rgb(CONTINUOUS_COLOR_LIST[CONTINUOUS_COLOR_LIST.length - 1])
       );
-      normalizeAttr = d3.scaleLinear().domain([0, 1]).range([0, 1]);
+      extremeVals = [0,1]
+      normalizeAttr = d3.scaleLinear().domain(extremeVals).range([0, 1]);
     }
     if (yearNum === 2) {
       colorLevelMap = d3
@@ -37,7 +38,8 @@ const AreaMap = ({ countyData, yearNum }) => {
         .domain([0, 0.5, 1])
         .range(CONTINUOUS_COLOR_LIST_NEG_TO_POS)
         .interpolate(d3.interpolateHcl);
-      normalizeAttr = d3.scaleLinear().domain([-1, 1]).range([0, 1]);
+      extremeVals = [-1,1]
+      normalizeAttr = d3.scaleLinear().domain(extremeVals).range([0, 1]);
     }
     drawAreas(countyData);
   }, [countyData, yearNum]);
@@ -58,7 +60,7 @@ const drawBgMap = () => {
     .scale([width * 1.2]);
   var path = geoPath().projection(projection);
   var svg = d3.select("#area-map").attr("width", width).attr("height", height);
-  d3.select("#area-legend").attr("width", width).attr("height", LEGEND_HEIGHT);
+  d3.select("#area-legend").attr("width", width).attr("height", LEGEND_HEIGHT + LEGEND_FONT_SIZE * 2);
   svg
     .selectAll("path")
     .data(feature(geoMapData, geoMapData.objects.counties).features)
@@ -101,7 +103,7 @@ const drawContinuousLegendScale = () => {
     .data(continuousValArr)
     .enter()
     .append("rect")
-    .attr("x", (d) => Math.floor(xScale(d)))
+    .attr("x", (d) => Math.floor(xScale(d)) + LEGEND_FONT_SIZE/2)
     .attr("y", 0)
     .attr("height", LEGEND_HEIGHT)
     .attr("width", (d) => {

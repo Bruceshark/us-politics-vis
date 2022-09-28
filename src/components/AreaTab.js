@@ -26,6 +26,11 @@ var selectedEthnicList = [];
 const AreaTab = ({ dataset, year1, year2 }) => {
   const [countyData, setData] = useState({});
   useEffect(() => {
+    selectedPartyList = [];
+    selectedEthnicList = [];
+    selectedAttr = null;
+  }, []);
+  useEffect(() => {
     handleChangeFilter();
   }, [dataset, year1, year2]);
   const handleChangeFilter = () => {
@@ -33,7 +38,6 @@ const AreaTab = ({ dataset, year1, year2 }) => {
     if (selectedPartyList.length === 0 || selectedEthnicList.length === 0)
       return;
     let countyValDict;
-    console.log(year2);
     if (year2) {
       let countyValDict1 = processSingleYear(year1);
       let countyValDict2 = processSingleYear(year2);
