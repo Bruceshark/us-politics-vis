@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from "react";
 import LineUpLite, {
   asTextColumn,
   asNumberColumn,
@@ -6,10 +6,10 @@ import LineUpLite, {
   asDateColumn,
   LineUpLiteColumn,
   featureDefault,
-} from '@lineup-lite/table';
+} from "@lineup-lite/table";
 import * as d3 from "d3";
-import { numberStatsGenerator, NumberBar, NumberColor, NumberSymbol } from '@lineup-lite/components';
-import '@lineup-lite/table/dist/table.css';
+import { numberStatsGenerator, NumberBar, NumberColor, NumberSymbol } from "@lineup-lite/components";
+import "@lineup-lite/table/dist/table.css";
 
 const partyList = [
   "race_european",
@@ -28,64 +28,72 @@ const party_dic = ["democrat", "republican", "nonpartisan"]
 const partymap = {"democrat": 0, "republican": 1, "nonpartisan": 2}
 const race_dic = ["european", "asian", "african", "hispanic", "other"]
 const racemap = {"european": 0, "asian": 1, "african": 2, "hispanic": 3, "other": 4}
-const years = ['2012', '2016', '2020']
-var data, flag = 0;
+const years = ["2012", "2016", "2020"]
 
-const LineUp = () => {
-  // const lineUpData = d3.json("frontend_data.json").then((data)=> {
-  //   for(var item in data['2012']){
-  //     var voted = data['2012'][item]['voted']
-  //     voted = {
-  //       ...voted,
-  //       "county": item
-  //     }
-  //     stats.push(voted)
-  //   }
-  // });
-    async function mount(){
-      data = await d3.json('lineup_cluster.json')
-      var distribution = {'2012': {}, '2016': {}, '2020': {}}
-      for(var i in years){
-        const year = years[i]
-        //console.log(i)
-        for(var key in data[year]){
-          distribution[year][key] = {'total': 0, 'voting': 0, 'voted': {}, 'nonvoted': {}}
-          var total = 0
-          var voted = 0
-          // ["democrat", "republican", "nonpartisan"]
-          var voted_party = [0, 0, 0]
-          var nonvoted_party = [0, 0, 0]
-          // ["european", "asian", "african", "hispanic", "other"]
-          var voted_race = [0, 0, 0, 0, 0]
-          var nonvoted_race = [0, 0, 0, 0, 0]
-          for(var subkey in data[year][key]){
-              total = total + data[year][key][subkey]
-              const split_dic = subkey.split("_")
-              if(split_dic[0] === 'voted'){
-                voted += data[year][key][subkey]
-                voted_party[partymap[split_dic[2]]] += data[year][key][subkey]
-                voted_race[racemap[split_dic[1]]] += data[year][key][subkey]
-              }
-              else{
-                nonvoted_party[partymap[split_dic[2]]] += data[year][key][subkey]
-                nonvoted_race[racemap[split_dic[1]]] += data[year][key][subkey]
-              }
-          }
-          distribution[year][key]["total"] = total
-          distribution[year][key]["voting"] = voted / total
-          for(var j in race_dic){
-            distribution[year][key]["voted"]["race_"+race_dic[j]] = voted_race[racemap[race_dic[j]]] / total
-            distribution[year][key]["nonvoted"]["race_"+race_dic[j]] = nonvoted_race[racemap[race_dic[j]]] / total
-          }
-          for(var j in party_dic){
-            distribution[year][key]['voted']['party_'+party_dic[j]] = voted_party[partymap[party_dic[j]]] / total
-            distribution[year][key]['nonvoted']['party_'+party_dic[j]] = nonvoted_party[partymap[party_dic[j]]] / total
-          }
+
+var distribution = {"2012": {}, "2016": {}, "2020": {}};
+
+var votedData = []
+var nonVotedData = []
+const LineUp = ({data, year1}) => {
+  const [lineUpData, setData] = useState([])
+  useEffect(() => {
+    genLineUp(year1, data)
+  }, [data, year1])
+  const genLineUp = (year, data) => {
+    var keyList = []
+    var allKeyList = []
+    //console.log(data[year][0])
+    //console.log(votedKeyList, nonVotedKeyList)
+    data[year].forEach(element => {
+      //console.log(element)
+      var tmpData = {"total": 0,"voted": {}, "nonvoted": {}}
+      var total = 0
+      var voted = 0
+      // ["democrat", "republican", "nonpartisan"]
+      var voted_party = [0, 0, 0]
+      var nonvoted_party = [0, 0, 0]
+      // ["european", "asian", "african", "hispanic", "other"]
+      var voted_race = [0, 0, 0, 0, 0]
+      var nonvoted_race = [0, 0, 0, 0, 0]
+      for(var subkey in element){
+        if(subkey === 'county'){
+          tmpData["voted"]["county"] = element[subkey]
+          tmpData["nonvoted"]["county"] = element[subkey]
+          continue;
+        }
+        total = total + Number(element[subkey])
+        const split_dic = subkey.split("_")
+        if(split_dic[0] === "voted"){
+          voted += Number(element[subkey])
+          voted_party[partymap[split_dic[2]]] += Number(element[subkey])
+          voted_race[racemap[split_dic[1]]] += Number(element[subkey])
+        }
+        else{
+          nonvoted_party[partymap[split_dic[2]]] += Number(element[subkey])
+          nonvoted_race[racemap[split_dic[1]]] += Number(element[subkey])
         }
       }
-      console.log("distribution ==>",distribution)
-    }
-    mount();
+      tmpData["total"] = total
+      tmpData["voted"]["voting_rate"] = voted / total
+      tmpData["nonvoted"]["voting_rate"] = voted / total
+      for(var j in party_dic){
+        tmpData["voted"]["party_"+party_dic[j]] = voted_party[partymap[party_dic[j]]] / total
+        tmpData["nonvoted"]["party_"+party_dic[j]] = nonvoted_party[partymap[party_dic[j]]] / total
+      }
+      for(var j in race_dic){
+        tmpData["voted"]["race_"+race_dic[j]] = voted_race[racemap[race_dic[j]]] / total
+        tmpData["nonvoted"]["race_"+race_dic[j]] = nonvoted_race[racemap[race_dic[j]]] / total
+      }
+      
+      //console.log("total", tmpData)
+      votedData.push(tmpData["voted"])
+      nonVotedData.push(tmpData["nonvoted"])
+      //console.log(voted_party, voted_race)
+    })
+  }
+  console.log("voted ==>",votedData.slice(1, 3))
+  console.log("nonvoted ==>",nonVotedData)
 
   
     const features = React.useMemo(() => featureDefault(), []);
@@ -94,6 +102,7 @@ const LineUp = () => {
       () => [
         {
           "county": "00013",
+          "voting_rate": 0.35,
           "race_european": 1,
           "race_asian": 3,
           "race_african": 5,
@@ -105,6 +114,7 @@ const LineUp = () => {
         },
         {
           "county": "00405",
+          "voting_rate": 0.71,
           "race_european": 0,
           "race_asian": 0,
           "race_african": 0,
@@ -112,19 +122,17 @@ const LineUp = () => {
           "race_other": 0,
           "party_democrat": 0,
           "party_republican": 0,
-          "party_nonpartisan": 0
       },
       ],
       []
     );
   
     const testcolumns = React.useMemo(
-      () => [asTextColumn('county'), asNumberColumn('race_european'), asNumberColumn("race_asian"), asNumberColumn("race_african"), 
+      () => [asTextColumn("county"), asNumberColumn("voting_rate"), asNumberColumn("race_european"), asNumberColumn("race_asian"), asNumberColumn("race_african"), 
       asNumberColumn("race_hispanic"), asNumberColumn("race_other"),
       asNumberColumn("party_democrat"), asNumberColumn("party_republican"), asNumberColumn("party_nonpartisan"),],
       []
     );
-    //console.log(stats);
     return (
     <div>
       <LineUpLite data={testdata} columns={testcolumns} features={features} />
