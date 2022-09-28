@@ -91,15 +91,17 @@ const LineUp = ({data, year1}) => {
       nonVotedData.push(tmpData["nonvoted"])
       //console.log(voted_party, voted_race)
     })
+
+    //now voted data
+    setData(votedData)
   }
-  console.log("voted ==>",votedData.slice(1, 3))
-  console.log("nonvoted ==>",nonVotedData)
+  // console.log("voted ==>",votedData.slice(1, 3))
+  // console.log("nonvoted ==>",nonVotedData)
 
   
-    const features = React.useMemo(() => featureDefault(), []);
+    const features = featureDefault()
 
-    const testdata = React.useMemo(
-      () => [
+    const testdata = [
         {
           "county": "00013",
           "voting_rate": 0.35,
@@ -123,19 +125,14 @@ const LineUp = ({data, year1}) => {
           "party_democrat": 0,
           "party_republican": 0,
       },
-      ],
-      []
-    );
+      ]
   
-    const testcolumns = React.useMemo(
-      () => [asTextColumn("county"), asNumberColumn("voting_rate"), asNumberColumn("race_european"), asNumberColumn("race_asian"), asNumberColumn("race_african"), 
+    const testcolumns = [asTextColumn("county"), asNumberColumn("voting_rate"), asNumberColumn("race_european"), asNumberColumn("race_asian"), asNumberColumn("race_african"), 
       asNumberColumn("race_hispanic"), asNumberColumn("race_other"),
-      asNumberColumn("party_democrat"), asNumberColumn("party_republican"), asNumberColumn("party_nonpartisan"),],
-      []
-    );
+      asNumberColumn("party_democrat"), asNumberColumn("party_republican"), asNumberColumn("party_nonpartisan"),]
     return (
     <div>
-      <LineUpLite data={testdata} columns={testcolumns} features={features} />
+      <LineUpLite data={lineUpData} columns={testcolumns} features={features} />
     </div>
     )
   }

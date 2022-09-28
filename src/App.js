@@ -17,7 +17,8 @@ class App extends Component {
     this.state = {
       selectedTab: 1,
       selectedYear1: "2012",
-      selectedYear2: "2020"
+      selectedYear2: "2020",
+      flag: false
     };
   }
   async componentDidMount() {
@@ -25,6 +26,7 @@ class App extends Component {
       let year = yearList[yearIdx]
       dataset[year] = await d3.csv(`dataset/${year}.csv`)
     }
+    this.setState({flag: true})
     console.log("===dataset loaded===")
     console.log(dataset)
   }
@@ -121,7 +123,7 @@ class App extends Component {
                   <div>Lineup View</div>
                   <div className="divider" />
                 </div>
-                {<LineUp />}
+                {this.state.flag === true && <LineUp data={dataset} year1={this.state.selectedYear1}/>}
               </Content>
             </Col>
           </Row>
