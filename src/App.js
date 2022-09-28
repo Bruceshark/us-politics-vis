@@ -11,6 +11,7 @@ const { Option } = Select;
 const tabList = ["Scatter", "Area", "Area - changes"];
 const yearList = ["2012", "2016", "2020"];
 var dataset = {};
+var fipsMap;
 class App extends Component {
   constructor(props) {
     super(props);
@@ -26,6 +27,7 @@ class App extends Component {
       let year = yearList[yearIdx]
       dataset[year] = await d3.csv(`dataset/${year}.csv`)
     }
+    fipsMap = await d3.json('fips_map.json')
     this.setState({flag: true})
     console.log("===dataset loaded===")
     console.log(dataset)
@@ -123,7 +125,7 @@ class App extends Component {
                   <div>Lineup View</div>
                   <div className="divider" />
                 </div>
-                {this.state.flag === true && <LineUp data={dataset} year1={this.state.selectedYear1}/>}
+                {this.state.flag === true && <LineUp data={dataset} year1={this.state.selectedYear1} fipsMap={fipsMap}/>}
               </Content>
             </Col>
           </Row>

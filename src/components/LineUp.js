@@ -35,12 +35,12 @@ var distribution = {"2012": {}, "2016": {}, "2020": {}};
 
 var votedData = []
 var nonVotedData = []
-const LineUp = ({data, year1}) => {
+const LineUp = ({data, year1, fipsMap}) => {
   const [lineUpData, setData] = useState([])
   useEffect(() => {
-    genLineUp(year1, data)
-  }, [data, year1])
-  const genLineUp = (year, data) => {
+    genLineUp(year1, data, fipsMap)
+  }, [data, year1, fipsMap])
+  const genLineUp = (year, data, fipsMap) => {
     var keyList = []
     var allKeyList = []
     //console.log(data[year][0])
@@ -58,8 +58,8 @@ const LineUp = ({data, year1}) => {
       var nonvoted_race = [0, 0, 0, 0, 0]
       for(var subkey in element){
         if(subkey === 'county'){
-          tmpData["voted"]["county"] = element[subkey]
-          tmpData["nonvoted"]["county"] = element[subkey]
+          tmpData["voted"]["county"] = fipsMap[element[subkey]]
+          tmpData["nonvoted"]["county"] = fipsMap[element[subkey]]
           continue;
         }
         total = total + Number(element[subkey])
