@@ -7,44 +7,34 @@ import LineUpLite, {
   LineUpLiteColumn,
   featureDefault,
 } from "@lineup-lite/table";
+import { Col, Row, Select } from "antd";
 import * as d3 from "d3";
-import { numberStatsGenerator, NumberBar, NumberColor, NumberSymbol } from "@lineup-lite/components";
+//import { numberStatsGenerator, NumberBar, NumberColor, NumberSymbol } from "@lineup-lite/components";
 import "@lineup-lite/table/dist/table.css";
-
-const partyList = [
-  "race_european",
-  "race_asian",
-  "race_african",
-  "race_hispanic",
-  "race_other"
-]
-const raceList = [
-  "party_democrat",
-  "party_republican",
-  "party_nonpartisan"
-]
 
 const party_dic = ["democrat", "republican", "nonpartisan"]
 const partymap = {"democrat": 0, "republican": 1, "nonpartisan": 2}
 const race_dic = ["european", "asian", "african", "hispanic", "other"]
 const racemap = {"european": 0, "asian": 1, "african": 2, "hispanic": 3, "other": 4}
-const years = ["2012", "2016", "2020"]
 
-
-var distribution = {"2012": {}, "2016": {}, "2020": {}};
+const { Option } = Select;
+const voteList = [
+  { label: "voted", value: "voted" },
+  { label: "non-voted", value: "nonvoted" },
+];
 
 var votedData = []
 var nonVotedData = []
+var selectVoteState = null;
 const LineUp = ({data, year1, fipsMap}) => {
   const [lineUpData, setData] = useState([])
+
   useEffect(() => {
     genLineUp(year1, data, fipsMap)
+    handleChangeFilter();
   }, [data, year1, fipsMap])
+
   const genLineUp = (year, data, fipsMap) => {
-    var keyList = []
-    var allKeyList = []
-    //console.log(data[year][0])
-    //console.log(votedKeyList, nonVotedKeyList)
     data[year].forEach(element => {
       //console.log(element)
       var tmpData = {"total": 0,"voted": {}, "nonvoted": {}}
@@ -91,47 +81,45 @@ const LineUp = ({data, year1, fipsMap}) => {
       nonVotedData.push(tmpData["nonvoted"])
       //console.log(voted_party, voted_race)
     })
+  }
 
-    //now voted data
-    setData(votedData)
+  const handleChangeFilter = () => {
+    if (!selectVoteState) return;
+    if(selectVoteState === "voted"){
+      setData(votedData)
+    }else{
+      setData(nonVotedData)
+    }
   }
   // console.log("voted ==>",votedData.slice(1, 3))
   // console.log("nonvoted ==>",nonVotedData)
 
   
     const features = featureDefault()
-
-    const testdata = [
-        {
-          "county": "00013",
-          "voting_rate": 0.35,
-          "race_european": 1,
-          "race_asian": 3,
-          "race_african": 5,
-          "race_hispanic": 7,
-          "race_other": 9,
-          "party_democrat": 2,
-          "party_republican": 4,
-          "party_nonpartisan": 1
-        },
-        {
-          "county": "00405",
-          "voting_rate": 0.71,
-          "race_european": 0,
-          "race_asian": 0,
-          "race_african": 0,
-          "race_hispanic": 0,
-          "race_other": 0,
-          "party_democrat": 0,
-          "party_republican": 0,
-      },
-      ]
   
     const testcolumns = [asTextColumn("county"), asNumberColumn("voting_rate"), asNumberColumn("race_european"), asNumberColumn("race_asian"), asNumberColumn("race_african"), 
       asNumberColumn("race_hispanic"), asNumberColumn("race_other"),
       asNumberColumn("party_democrat"), asNumberColumn("party_republican"), asNumberColumn("party_nonpartisan"),]
     return (
     <div>
+      <Row gutter={16}>
+        <Col span={8}>
+          <Select
+            // mode="multiple"
+            allowClear
+            style={{ width: "100%" }}
+            placeholder="select an attribute to explore"
+            onChange={(val) => {
+              selectVoteState = val;
+              handleChangeFilter();
+            }}
+          >
+            {voteList.map((val) => (
+              <Option key={val.value}>{val.label}</Option>
+            ))}
+          </Select>
+        </Col>
+      </Row>
       <LineUpLite data={lineUpData} columns={testcolumns} features={features} />
     </div>
     )
