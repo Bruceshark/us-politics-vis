@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
-import LineUpLite, {
+import {
+  LineUpLiteVirtual,
   asTextColumn,
   asNumberColumn,
   asCategoricalColumn,
   asDateColumn,
   LineUpLiteColumn,
   featureDefault,
-} from "@lineup-lite/table";
+} from '@lineup-lite/table';
+import '@lineup-lite/table/dist/table.css';
 import { Col, Row, Select } from "antd";
 import * as d3 from "d3";
-//import { numberStatsGenerator, NumberBar, NumberColor, NumberSymbol } from "@lineup-lite/components";
 import "@lineup-lite/table/dist/table.css";
 
 const party_dic = ["democrat", "republican", "nonpartisan"]
@@ -120,7 +121,9 @@ const LineUp = ({data, year1, fipsMap}) => {
           </Select>
         </Col>
       </Row>
-      <LineUpLite data={lineUpData} columns={testcolumns} features={features} />
+      <div>
+      <LineUpLiteVirtual data={lineUpData} columns={testcolumns} features={features} estimatedSize={25} style={{ height: 1200 }}/>
+      </div>
     </div>
     )
   }
