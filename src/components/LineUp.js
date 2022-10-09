@@ -69,12 +69,24 @@ const LineUp = ({data, year1, fipsMap}) => {
       tmpData["voted"]["voting_rate"] = voted / total
       tmpData["nonvoted"]["voting_rate"] = voted / total
       for(var j in party_dic){
-        tmpData["voted"]["party_"+party_dic[j]] = voted_party[partymap[party_dic[j]]] / total
-        tmpData["nonvoted"]["party_"+party_dic[j]] = nonvoted_party[partymap[party_dic[j]]] / total
+        const totalParty = voted_party[partymap[party_dic[j]]] + nonvoted_party[partymap[party_dic[j]]]
+        if(totalParty === 0){
+          tmpData["voted"]["party_"+party_dic[j]] = NaN
+          tmpData["nonvoted"]["party_"+party_dic[j]] = NaN
+        }else{
+          tmpData["voted"]["party_"+party_dic[j]] = voted_party[partymap[party_dic[j]]] / totalParty
+          tmpData["nonvoted"]["party_"+party_dic[j]] = nonvoted_party[partymap[party_dic[j]]] / totalParty
+        }
       }
       for(var j in race_dic){
-        tmpData["voted"]["race_"+race_dic[j]] = voted_race[racemap[race_dic[j]]] / total
-        tmpData["nonvoted"]["race_"+race_dic[j]] = nonvoted_race[racemap[race_dic[j]]] / total
+        const totalRace = voted_race[racemap[race_dic[j]]] + nonvoted_race[racemap[race_dic[j]]]
+        if(totalRace === 0){
+          tmpData["voted"]["race_"+race_dic[j]] = NaN
+          tmpData["nonvoted"]["race_"+race_dic[j]] = NaN
+        }else{
+          tmpData["voted"]["race_"+race_dic[j]] = voted_race[racemap[race_dic[j]]] / total
+          tmpData["nonvoted"]["race_"+race_dic[j]] = nonvoted_race[racemap[race_dic[j]]] / total
+        }
       }
       
       //console.log("total", tmpData)
